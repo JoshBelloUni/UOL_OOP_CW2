@@ -1,7 +1,7 @@
 public class test {
     public static void main(String[] args) {
-        BaccaratCard c1 = new BaccaratCard(BaccaratCard.Rank.TEN, BaccaratCard.Suit.HEARTS);
-        BaccaratCard c2 = new BaccaratCard(BaccaratCard.Rank.TEN, BaccaratCard.Suit.SPADES);
+        BaccaratCard c1 = new BaccaratCard(BaccaratCard.Rank.EIGHT, BaccaratCard.Suit.HEARTS);
+        BaccaratCard c2 = new BaccaratCard(BaccaratCard.Rank.SEVEN, BaccaratCard.Suit.SPADES);
 
         BaccaratHand h1 = new BaccaratHand();
 
@@ -11,7 +11,5 @@ public class test {
         int v = h1.value();
         System.out.println(v);
         System.out.println(h1.toString());
-
     }
 }
-

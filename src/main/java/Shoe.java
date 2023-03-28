@@ -33,7 +33,7 @@ public class Shoe {
         if (cards.isEmpty()) {
             throw new CardException("Shoe is empty");
         }
-
+        
         return cards.removeFirst();
     }
 }
