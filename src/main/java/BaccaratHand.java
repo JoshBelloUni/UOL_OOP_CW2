@@ -38,4 +38,14 @@ public class BaccaratHand extends CardCollection {
         return sb.toString().trim();
     }
 
+    public BaccaratCard getThirdCard() {
+        int size = cards.size();
+        if (size < 3) {
+            return null; // or throw an exception
+        }
+        return (BaccaratCard) cards.get(size - 3); // note that indexing starts from 0
+    }
+    
+    
+
 }
