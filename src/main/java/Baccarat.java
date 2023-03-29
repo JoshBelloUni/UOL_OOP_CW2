@@ -351,11 +351,11 @@ public class Baccarat {
         Scanner checkExit = new Scanner(System.in);
         System.out.print("Another Round? (y/n): ");
         String check = checkExit.nextLine();
-        check.toLowerCase();
+        check = check.toLowerCase();
         while (!check.equals("y") && !check.equals("n")) {
             System.out.print("Enter y or n ");
             check = checkExit.nextLine();
-            check.toLowerCase();
+            check = check.toLowerCase();
         }
         if (check.equals("n")) {
             return 1;
