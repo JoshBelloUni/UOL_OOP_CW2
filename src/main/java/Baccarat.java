@@ -29,6 +29,7 @@ public class Baccarat {
         if (args.length == 0) {
             while (shoe.size() > 6) {   // end of game checks
                 gameRound.BasicRound(shoe);
+                gameRound.round++;
             }
         } 
 
@@ -36,6 +37,7 @@ public class Baccarat {
         else if (args.length == 1 && (args[0].equals("-i") || args[0].equals("--interactive"))) {
             while (true) {
                 gameRound.BasicRound(shoe);
+                gameRound.round++;
                 if (gameRound.checkExit(inputScanner) == 1 || shoe.size() < 6) { // end of game checks
                     break;
                 }
@@ -125,7 +127,6 @@ public class Baccarat {
         if (shoe.size() < 6) {
             return;
         }
-        this.round++;
         System.out.println();
     }
 
