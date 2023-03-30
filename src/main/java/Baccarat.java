@@ -2,210 +2,131 @@ import java.util.Scanner;
 import java.lang.String;
 
 public class Baccarat {
+
+    int round = 1;
+    int pWins = 0;
+    int bWins = 0;
+    int ties = 0;
+    
     public static void main(String[] args) {
+
+        // command line check if there is too much args
         if (args.length > 1) {
+            throw new CardException("Invalid Number of Arguments");
+        }
+        
+        // creating instance of shoe object
+        Shoe shoe = new Shoe(6);
+        shoe.shuffle();
+
+        // creating game object
+        Baccarat gameRound = new Baccarat();
+
+        // creating scanner
+        Scanner inputScanner = new Scanner(System.in);
+        
+        // running basic mode
+        if (args.length == 0) {
+            while (shoe.size() > 6) {   // end of game checks
+                gameRound.BasicRound(shoe);
+            }
+        } 
+
+        // running interacive mode
+        else if (args.length == 1 && (args[0].equals("-i") || args[0].equals("--interactive"))) {
+            while (true) {
+                gameRound.BasicRound(shoe);
+                if (gameRound.checkExit(inputScanner) == 1 || shoe.size() < 6) { // end of game checks
+                    break;
+                }
+            }
+        } 
+        else {  // args are incorrect
+            inputScanner.close();
             throw new CardException("Invalid Arguments");
         }
 
-        if (args.length == 1) {
-            if (args[0].equals("-i") || args[0].equals("--interactive")) {
-                Baccarat game = new Baccarat();
-                game.InteractiveGame();
-                System.exit(0);
-            } else {
-                throw new CardException("Invalid flag");
-            }
-        } else {
-            Baccarat game = new Baccarat();
-            game.BasicGame();
-            System.exit(0);
-        }
+        // close Scanner
+        inputScanner.close();
+
+        // print game results
+        gameRound.printEndingScreen(gameRound.round, gameRound.pWins, gameRound.bWins, gameRound.ties);
     }
 
-    private void BasicGame() {
-        // initialise variables for counting
-        int round = 1;
-        int pWins = 0;
-        int bWins = 0;
-        int ties = 0;
+    private void BasicRound(Shoe shoe) {
+        // printing the round number
+        System.out.println("Round " + this.round);
 
-        // creating instance of shoe object
-        Shoe shoe = new Shoe(6);
-        shoe.shuffle();
+        // creating instances of the hand objects for the player and banker
+        BaccaratHand playerHand = new BaccaratHand();
+        BaccaratHand bankerHand = new BaccaratHand();
 
-        while (true) {
+        // initialise the round with 2 cards per person and print them out
+        initGame(playerHand, bankerHand, shoe);
 
-            // printing the round number
-            System.out.println("Round " + round);
+        int winner = checkWinner(playerHand, bankerHand);
+        switch (winner) {
+            case 0: // if there is a tie return 0
+                this.ties++;
+                break;
+            case 1: // if there is a player win return 1
+                this.pWins++;
+                break;
+            case 2: // if there is a banker win return 2
+                this.bWins++;
+                break;
+        }
 
-            // creating instances of the hand objects for the player and banker
-            BaccaratHand playerHand = new BaccaratHand();
-            BaccaratHand bankerHand = new BaccaratHand();
+        // if no tie or winner is found, then the rules are run
+        if (!playerHand.isNatural() && !bankerHand.isNatural() && playerHand.value() != bankerHand.value()) {
+            boolean playerDrew = playerRule(playerHand, shoe, "player");
+            if (playerDrew == true) { // if the player drew, then the bankers rules apply
+                bankerRule(bankerHand, shoe, playerHand.getThirdCard().value());
+            }
+            if (playerDrew == false) { // if the player did not draw, then the banker user the player rules
+                playerRule(bankerHand, shoe, "banker");
+            }
 
-            // initialise the round with 2 cards per person and print them out
-            initGame(playerHand, bankerHand, shoe);
+            printHands(playerHand, bankerHand);
 
-            int winner = checkWinner(playerHand, bankerHand);
+            // check again for winner
+            winner = checkWinner(playerHand, bankerHand);
             switch (winner) {
                 case 0: // if there is a tie return 0
-                    ties++;
+                    this.ties++;
                     break;
                 case 1: // if there is a player win return 1
-                    pWins++;
+                    this.pWins++;
                     break;
                 case 2: // if there is a banker win return 2
-                    bWins++;
+                    this.bWins++;
                     break;
             }
 
-            // if no tie or winner is found, then the rules are run
-            if (!playerHand.isNatural() && !bankerHand.isNatural() && playerHand.value() != bankerHand.value()) {
-                boolean playerDrew = playerRule(playerHand, shoe, "player");
-                if (playerDrew == true) { // if the player drew, then the bankers rules apply
-                    bankerRule(bankerHand, shoe, playerHand.getThirdCard().value());
-                }
-                if (playerDrew == false) { // if the player did not draw, then the banker user the player rules
-                    playerRule(bankerHand, shoe, "banker");
-                }
-
-                printHands(playerHand, bankerHand);
-
-                // check again for winner
-                winner = checkWinner(playerHand, bankerHand);
-                switch (winner) {
-                    case 0: // if there is a tie return 0
-                        ties++;
-                        break;
-                    case 1: // if there is a player win return 1
-                        pWins++;
-                        break;
-                    case 2: // if there is a banker win return 2
-                        bWins++;
-                        break;
-                }
-
-                // additional check for winner
-                // only happens if there is a third drawn card
-                // whatever the higer value wins
-                winner = checkHigher(playerHand, bankerHand);
-                switch (winner) {
-                    case 1: // if there is a player win return 1
-                        pWins++;
-                        break;
-                    case 2: // if there is a banker win return 2
-                        bWins++;
-                        break;
-                }
-            }
-
-            // discard the hand and start over
-            playerHand.discard();
-            bankerHand.discard();
-
-            // if shoe gets below 6 cards then output the game results
-            if (shoe.size() < 6) {
-                break;
-            }
-            round++;
-            System.out.println();
-        }
-        printEndingScreen(round, pWins, bWins, ties);
-    }
-
-    private void InteractiveGame() {
-        // initialise variables for counting
-        int round = 1;
-        int pWins = 0;
-        int bWins = 0;
-        int ties = 0;
-
-        // creating instance of shoe object
-        Shoe shoe = new Shoe(6);
-        shoe.shuffle();
-
-        while (true) {
-
-            // printing the round number
-            System.out.println("Round " + round);
-
-            // creating instances of the hand objects for the player and banker
-            BaccaratHand playerHand = new BaccaratHand();
-            BaccaratHand bankerHand = new BaccaratHand();
-
-            // initialise the round with 2 cards per person and print them out
-            initGame(playerHand, bankerHand, shoe);
-
-            int winner = checkWinner(playerHand, bankerHand);
+            // additional check for winner
+            // only happens if there is a third drawn card
+            // whatever the higer value wins
+            winner = checkHigher(playerHand, bankerHand);
             switch (winner) {
-                case 0: // if there is a tie return 0
-                    ties++;
-                    break;
                 case 1: // if there is a player win return 1
-                    pWins++;
+                    this.pWins++;
                     break;
                 case 2: // if there is a banker win return 2
-                    bWins++;
+                    this.bWins++;
                     break;
             }
-
-            // if no tie or winner is found, then the rules are run
-            if (!playerHand.isNatural() && !bankerHand.isNatural() && playerHand.value() != bankerHand.value()) {
-                boolean playerDrew = playerRule(playerHand, shoe, "player");
-                if (playerDrew == true) { // if the player drew, then the bankers rules apply
-                    bankerRule(bankerHand, shoe, playerHand.getThirdCard().value());
-                }
-                if (playerDrew == false) { // if the player did not draw, then the banker user the player rules
-                    playerRule(bankerHand, shoe, "banker");
-                }
-
-                printHands(playerHand, bankerHand);
-
-                // check again for winner
-                winner = checkWinner(playerHand, bankerHand);
-                switch (winner) {
-                    case 0: // if there is a tie return 0
-                        ties++;
-                        break;
-                    case 1: // if there is a player win return 1
-                        pWins++;
-                        break;
-                    case 2: // if there is a banker win return 2
-                        bWins++;
-                        break;
-                }
-
-                // additional check for winner
-                // only happens if there is a third drawn card
-                // whatever the higer value wins
-                winner = checkHigher(playerHand, bankerHand);
-                switch (winner) {
-                    case 1: // if there is a player win return 1
-                        pWins++;
-                        break;
-                    case 2: // if there is a banker win return 2
-                        bWins++;
-                        break;
-                }
-            }
-
-            // discard the hand and start over
-            playerHand.discard();
-            bankerHand.discard();
-
-            // if shoe gets below 6 cards then output the game results
-            if (shoe.size() < 6) {
-                break;
-            }
-
-            // check if the user wants to exit
-            if (checkExit() == 1) {
-                break;
-            }
-
-            round++;
-            System.out.println();
         }
-        printEndingScreen(round, pWins, bWins, ties);
+
+        // discard the hand and start over
+        playerHand.discard();
+        bankerHand.discard();
+
+        // if shoe gets below 6 cards then output the game results
+        if (shoe.size() < 6) {
+            return;
+        }
+        this.round++;
+        System.out.println();
     }
 
     /*
@@ -341,14 +262,13 @@ public class Baccarat {
     }
 
     private void printEndingScreen(int rounds, int pWins, int bWins, int ties) {
-        System.out.println("\n------------------\n" + rounds + " rounds played");
+        System.out.println("\n------------------\n" + (rounds - 1) + " rounds played");
         System.out.println(pWins + " player wins");
         System.out.println(bWins + " banker wins");
         System.out.println(ties + " ties\n------------------");
     }
 
-    private int checkExit() {
-        Scanner checkExit = new Scanner(System.in);
+    private int checkExit(Scanner checkExit) {
         System.out.print("Another Round? (y/n): ");
         String check = checkExit.nextLine();
         check = check.toLowerCase();
